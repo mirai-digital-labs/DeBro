@@ -1,0 +1,82 @@
+version: '3.8'
+
+services:
+  # 1. PostgreSQL 16 with pgvector Extension
+  postgres:
+    image: pgvector/pgvector:pg16
+    container_name: debro_prod_postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-debro_admin}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-ChangeMeInProduction_StrongPass123!}
+      POSTGRES_DB: ${POSTGRES_DB:-debro_commerce_prod}
+    ports:
+      - "5432:5432"
+    volumes:
+      - debro_postgres_data:/var/lib/postgresql/data
+      - ./init-db.sql:/docker-entrypoint-initdb.d/01-init.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U debro_admin -d debro_commerce_prod"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # 2. Redis Cache & Queue Broker
+  redis:
+    image: redis:7-alpine
+    container_name: debro_prod_redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes --requirepass ${REDIS_PASSWORD:-RedisSecret123!}
+    ports:
+      - "6379:6379"
+    volumes:
+      - debro_redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "-a", "${REDIS_PASSWORD:-RedisSecret123!}", "ping"]
+      interval: 10s
+      timeout: 3s
+      retries: 5
+
+  # 3. DeBro Modular Monolith Backend API
+  backend:
+    build:
+      context: ..
+      dockerfile: apps/backend/Dockerfile
+    container_name: debro_prod_backend
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 9000
+      DATABASE_URL: postgres://${POSTGRES_USER:-debro_admin}:${POSTGRES_PASSWORD:-ChangeMeInProduction_StrongPass123!}@postgres:5432/${POSTGRES_DB:-debro_commerce_prod}
+      REDIS_URL: redis://:${REDIS_PASSWORD:-RedisSecret123!}@redis:6379
+      JWT_SECRET: ${JWT_SECRET:-SuperSecretJwtKey2026PakistanToGlobal_DeBro}
+      CORS_STOREFRONT_ORIGIN: ${CORS_STOREFRONT_ORIGIN:-https://debro.pk}
+    ports:
+      - "9000:9000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+  # 4. DeBro Customer Storefront (Next.js 14)
+  storefront:
+    build:
+      context: ..
+      dockerfile: apps/storefront/Dockerfile
+    container_name: debro_prod_storefront
+    restart: unless-stopped
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      NEXT_PUBLIC_API_URL: http://backend:9000
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+volumes:
+  debro_postgres_data:
+    driver: local
+  debro_redis_data:
+    driver: local

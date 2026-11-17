@@ -1,0 +1,35 @@
+{
+  "name": "universal-commerce-platform",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Universal AI-Powered Global Commerce & Marketplace Platform (Pakistan First -> Global)",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev:backend": "node apps/backend/dist/index.js",
+    "dev:storefront": "next dev apps/storefront -p 3000",
+    "test:catalog": "node scripts/test-catalog-api.js",
+    "test:storefront": "node scripts/test-storefront.js",
+    "build:types": "tsc --project packages/types/tsconfig.json && node -e \"require('fs').cpSync('packages/types/dist', 'node_modules/@platform/types/dist', {recursive:true})\"",
+    "build:backend": "tsc --project apps/backend/tsconfig.json",
+    "test:inventory": "node scripts/test-inventory-orders.js",
+    "test:payments": "node scripts/test-payments.js",
+    "test:marketplace": "node scripts/test-marketplace.js",
+    "test:b2b": "node scripts/test-b2b.js",
+    "test:i18n": "node scripts/test-i18n.js",
+    "test:ai": "node scripts/test-ai-engine.js",
+    "test:admin": "node scripts/test-admin-ops.js",
+    "test:hardening": "node scripts/test-hardening-stress.js",
+    "test:all": "node scripts/test-all-phases.js",
+    "build": "npm run build:types && npm run build:backend"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.3",
+    "prettier": "^3.3.3"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  }
+}

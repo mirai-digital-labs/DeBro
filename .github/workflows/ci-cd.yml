@@ -1,0 +1,40 @@
+name: DeBro CI/CD Pipeline & Master Acceptance
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  test-and-verify:
+    name: Build & Run Platform Acceptance Tests
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Source Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+
+      - name: Install Monorepo Dependencies
+        run: npm ci
+
+      - name: Build Shared Types Package
+        run: npm run build:types
+
+      - name: Build Backend Service
+        run: npm run build:backend
+
+      - name: Execute Master Test Suite (332 Acceptance Tests)
+        run: node scripts/test-all-phases.js
+
+      - name: Verify Backend Docker Build
+        run: docker build -f apps/backend/Dockerfile -t debro-backend:latest .
+
+      - name: Verify Storefront Docker Build
+        run: docker build -f apps/storefront/Dockerfile -t debro-storefront:latest .
