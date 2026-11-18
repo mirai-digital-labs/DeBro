@@ -6,6 +6,11 @@ import { useCartStore } from '@/lib/cart-store';
 import Link from 'next/link';
 import { ArrowLeft, ShieldCheck, Truck, CreditCard } from 'lucide-react';
 
+const BACKEND_URL =
+  process.env.NEXT_PUBLIC_API_URL ||
+  process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL ||
+  'https://debro-production-022962ca.up.railway.app';
+
 export default function CheckoutPage() {
   const router = useRouter();
   const { cart } = useCartStore();
@@ -39,7 +44,7 @@ export default function CheckoutPage() {
     setErrorMessage('');
 
     try {
-      const res = await fetch(`http://localhost:9000/api/v1/cart/${cart.id}/checkout`, {
+      const res = await fetch(`${BACKEND_URL}/api/v1/cart/${cart.id}/checkout`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

@@ -17,7 +17,10 @@ interface CartState {
   removeItem: (itemId: string) => Promise<void>;
 }
 
-const BACKEND_URL = process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL || 'http://localhost:9000';
+const BACKEND_URL =
+  process.env.NEXT_PUBLIC_API_URL ||
+  process.env.NEXT_PUBLIC_MEDUSA_BACKEND_URL ||
+  'https://debro-production-022962ca.up.railway.app';
 
 export const useCartStore = create<CartState>()(
   persist(
